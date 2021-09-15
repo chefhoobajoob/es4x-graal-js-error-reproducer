@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+	<property name="LOG_BASE_NAME" value="es4x-graaljs-errors"/>
+<!-- truncating file appender - creates a new log file each time the service is started -->
+	<appender name="file" class="ch.qos.logback.core.FileAppender">
+		<file>${LOG_BASE_NAME}.log</file>
+		<append>false</append>
+		<encoder>
+			<pattern>%d{"yyyy-MM-dd'T'HH:mm:ss,SSSZ"} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+	<appender class="ch.qos.logback.core.ConsoleAppender" name="stdout">
+		<encoder>
+			<pattern>%d{"yyyy-MM-dd'T'HH:mm:ss,SSSZ"} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+<!-- type-specific settings override log level specified in root element -->
+<!--
+	<logger name="com.igc.pubsubx.zmq" level="error" />
+ -->
+
+	<root level="trace">
+		<appender-ref ref="file" />
+		<appender-ref ref="stdout" />
+	</root>
+</configuration>

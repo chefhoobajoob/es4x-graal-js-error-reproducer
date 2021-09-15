@@ -1,3 +1,5 @@
+import org.gradle.internal.jvm.Jvm
+
 repositories {
     mavenCentral()
 }
@@ -9,11 +11,18 @@ if ( !hasProperty( 'buildNumber' ) ) {
 }
 version = "$baseVersion.$buildNumber"
 
+println ''
+println '>>>'
+println "Gradle version: ${project.getGradle().gradleVersion}"
+println "Java version: ${Jvm.current()}"
+println '>>>'
+println ''
+
 def vertxVersion = "4.1.3"
 def es4xVersion = "0.15.0"
 def junitVersion = "5.7.2"
 def junitPlatformVersion = "1.7.2"
-def graalvmVersion = "21.2.0"
+def graalVmVersion = "21.2.0"
 dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.26'
     implementation "io.vertx:vertx-core:$vertxVersion"
@@ -21,13 +30,13 @@ dependencies {
 
     runtimeOnly 'ch.qos.logback:logback-classic:1.2.3'
     runtimeOnly 'ch.qos.logback:logback-core:1.2.3'
-    runtimeOnly "org.graalvm.sdk:graal-sdk:$graalvmVersion"
-    runtimeOnly "org.graalvm.truffle:truffle-api:$graalvmVersion"
-    runtimeOnly "org.graalvm.js:js:$graalvmVersion"
-    runtimeOnly "org.graalvm.tools:profiler:$graalvmVersion"
-    runtimeOnly "org.graalvm.tools:chromeinspector:$graalvmVersion"
-    runtimeOnly "org.graalvm.compiler:compiler:$graalvmVersion"
-    runtimeOnly "org.graalvm.compiler:compiler-management:$graalvmVersion"
+    runtimeOnly "org.graalvm.sdk:graal-sdk:$graalVmVersion"
+    runtimeOnly "org.graalvm.truffle:truffle-api:$graalVmVersion"
+    runtimeOnly "org.graalvm.js:js:$graalVmVersion"
+    runtimeOnly "org.graalvm.tools:profiler:$graalVmVersion"
+    runtimeOnly "org.graalvm.tools:chromeinspector:$graalVmVersion"
+    runtimeOnly "org.graalvm.compiler:compiler:$graalVmVersion"
+    runtimeOnly "org.graalvm.compiler:compiler-management:$graalVmVersion"
 
     testImplementation "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
@@ -39,12 +48,32 @@ dependencies {
     testImplementation 'org.assertj:assertj-core:3.20.2'
 }
 
-test {
-    useJUnitPlatform()
+tasks.withType(JavaCompile).configureEach {
+    javaCompiler = javaToolchains.compilerFor {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
 }
 
-java {
-    toolchain {
-        languageVersion.set( JavaLanguageVersion.of( 11 ) )
+tasks.withType(Test).configureEach {
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(11)
     }
+}
+
+def paths = [:]
+configurations.runtimeClasspath.files.each {
+    if ( it.path.endsWith("graal-sdk-${graalVmVersion}.jar") ) {
+        paths['sdk'] = it.path
+    } else if ( it.path.endsWith( "truffle-api-${graalVmVersion}.jar" ) ) {
+        paths['truffle'] = it.path
+    } else if ( it.path.endsWith( "compiler-${graalVmVersion}.jar" ) ) {
+        paths['compiler'] = it.path
+    } else if ( it.path.endsWith( "compiler-management-${graalVmVersion}.jar" ) ) {
+        paths['management'] = it.path
+    }
+}
+
+test {
+    useJUnitPlatform()
+    jvmArgs = ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', "--module-path=${paths['sdk']}", "--upgrade-module-path=${paths['compiler']};${paths['management']};${paths['truffle']}"]
 }
