@@ -15,10 +15,13 @@ public class Tests {
     Logger _logger = LoggerFactory.getLogger( Tests.class );
 
     @Test
-    public void test( Vertx theVertx, VertxTestContext theContext )
+    public void testRunsOnJvm11OrLater( Vertx theVertx, VertxTestContext theContext )
     {
-        _logger.info("Test is running!");
-        assertThat( true ).isTrue();
+        String version = System.getProperty( "java.version" );
+        _logger.info( "Test running on jvm {}", version );
+        theContext.verify( () -> {
+            assertThat( Integer.parseInt( version.split( "\\." )[0] ) ).as( "require jvm >= 11" ).isGreaterThanOrEqualTo( 11 );
+        });
         theContext.completeNow();
     }
 }
