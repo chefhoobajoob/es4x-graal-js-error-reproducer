@@ -8,6 +8,8 @@ if ( !hasProperty( 'buildNumber' ) ) {
     ext.buildNumber = defaultBuildNumber
 }
 
+version = '1.0.0'
+
 def vertxVersion = "4.1.3"
 def es4xVersion = "0.15.0"
 def junitVersion = "5.7.2"
@@ -47,12 +49,6 @@ dependencies {
     testImplementation 'org.assertj:assertj-core:3.20.2'
 }
 
-compileJava {
-    // TODO: we still need to pass variables to codegen somehow
-    // TODO: it seems that the the generator is not executed?
-    options.annotationProcessorPath = configurations.annotationProcessor
-}
-
 tasks.withType(JavaCompile).configureEach {
     javaCompiler = javaToolchains.compilerFor {
         languageVersion = JavaLanguageVersion.of(8)
@@ -63,6 +59,42 @@ tasks.withType(Test).configureEach {
     javaLauncher = javaToolchains.launcherFor {
         languageVersion = JavaLanguageVersion.of(11)
     }
+}
+
+// include this when generating java language classes that need compilation
+// this is a no-op if there's no java codegen
+sourceSets {
+    vertxPolyglot{
+        java.srcDir "${buildDir.canonicalPath}/generated-sources/vertx"
+    }
+    main {
+        java {
+            srcDir "${buildDir.canonicalPath}/generated-sources/vertx"
+        }
+    }
+}
+
+apply from: "es4x-codegen.gradle"
+task generatePolyglotApis(type: JavaCompile) {
+    group 'build'
+    description 'Generates Vertx js and rxjava apis'
+    source = sourceSets.main.java
+    options.annotationProcessorPath = configurations.annotationProcessor
+    classpath = configurations.compileClasspath
+    options.debugOptions.debugLevel = "source,lines,vars"
+    options.compilerArgs = [
+            "-proc:only",
+            "-processor", "io.vertx.codegen.CodeGenProcessor",
+            "-Acodegen.output=${buildDir}/generated-sources/vertx"
+    ]
+    destinationDir file("${buildDir}/generated-sources/vertx")
+}
+
+compileJava {
+    dependsOn(generatePolyglotApis)
+    options.debugOptions.debugLevel = "source,lines,vars"
+    source += sourceSets.vertxPolyglot.java // compile generated java classes, if any
+    options.compilerArgs += '-proc:none'
 }
 
 test {

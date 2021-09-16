@@ -1,0 +1,35 @@
+def npmVersion
+def versionFields = version.split("\\.")
+if (versionFields.length == 4) {
+    npmVersion = "${versionFields[0]}.${versionFields[1]}.${versionFields[3]}"
+} else if (versionFields.length == 3) {
+    npmVersion = version
+} else {
+    throw new GradleException("Version string (${version}) has an unexpected number of fields")
+}
+def vertxNpmVersion = "4.1.0"
+def npmDependencies = """
+{
+  "@vertx/core": "$vertxNpmVersion"
+}
+"""
+def npmDevDependencies = """
+{
+}
+"""
+def packageJson = """
+{
+  "name": "vertx-base",
+  "description": "Utility types for use in vert.x es4x js verticles",
+  "version": "$npmVersion",
+  "public": false,
+  "maven": {
+    "groupId": "$mavenGroupId",
+    "artifactId": "$mavenArtifactId",
+    "version": "$version"
+  },
+  "dependencies": $npmDependencies,
+  "devDependencies": $npmDevDependencies
+}
+"""
+System.properties['package-json'] = packageJson.toString()
