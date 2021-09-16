@@ -12,16 +12,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(VertxExtension.class)
 public class Tests {
-    Logger _logger = LoggerFactory.getLogger( Tests.class );
+    Logger _logger = LoggerFactory.getLogger(Tests.class);
 
     @Test
-    public void testRunsOnJvm11OrLater( Vertx theVertx, VertxTestContext theContext )
-    {
-        String version = System.getProperty( "java.version" );
-        _logger.info( "Test running on jvm {}", version );
-        theContext.verify( () -> {
-            assertThat( Integer.parseInt( version.split( "\\." )[0] ) ).as( "require jvm >= 11" ).isGreaterThanOrEqualTo( 11 );
+    public void testRunsOnJvm11OrLater(Vertx theVertx, VertxTestContext theContext) {
+        String version = System.getProperty("java.version");
+        _logger.info("Test running on jvm {}", version);
+        theContext.verify(() -> {
+            assertThat(Integer.parseInt(version.split("\\.")[0])).as("require jvm >= 11").isGreaterThanOrEqualTo(11);
         });
-        theContext.completeNow();
+
+        theVertx.deployVerticle("js:index.js")
+                .onSuccess(id -> theContext.completeNow())
+                .onFailure(theContext::failNow);
     }
 }
