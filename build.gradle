@@ -47,6 +47,8 @@ dependencies {
     testImplementation "io.vertx:vertx-unit:$vertxVersion"
     testImplementation "io.vertx:vertx-junit5:$vertxVersion"
     testImplementation 'org.assertj:assertj-core:3.20.2'
+    testImplementation 'ch.qos.logback:logback-classic:1.2.3'
+    testImplementation 'ch.qos.logback:logback-core:1.2.3'
 }
 
 tasks.withType(JavaCompile).configureEach {
