@@ -38,7 +38,7 @@ public class Tests {
 
         ((ch.qos.logback.classic.Logger)LoggerFactory.getLogger( "es4x.tests.index" )).addAppender( _appender );
         String catchphrase = "Marcia, Marcia, Marcia!";
-        deploy( theVertx, "js", catchphrase )
+        deploy( theVertx, "js:index.js", catchphrase )
         .onSuccess(id -> {
             loggedCatchphrase( theContext, catchphrase );
             theVertx.undeploy( id, (ignored) -> theContext.completeNow() );
@@ -56,12 +56,36 @@ public class Tests {
 
         ((ch.qos.logback.classic.Logger)LoggerFactory.getLogger( "es4x.tests.index" )).addAppender( _appender );
         String catchphrase = "Shazbot! Nanu-nanu";
-        deploy( theVertx, "mjs", catchphrase )
+        deploy( theVertx, "mjs:index.mjs", catchphrase )
         .onSuccess( id -> {
             loggedCatchphrase( theContext, catchphrase );
             theVertx.undeploy( id, (ignored) -> theContext.completeNow() );
         })
         .onFailure( theContext::failNow );
+    }
+
+    @Test
+    public void mjsFactoryFailsOnRequire( Vertx theVertx, VertxTestContext theContext ) {
+        _logger = LoggerFactory.getLogger( Tests.class.getCanonicalName() + ".mjsFactoryDeploys" );
+        jvm11OrLater( theContext );
+        if ( theContext.failed() ) {
+            return;
+        }
+
+        ((ch.qos.logback.classic.Logger)LoggerFactory.getLogger( "es4x.tests.index" )).addAppender( _appender );
+        String catchphrase = "Are we there yet?";
+        deploy( theVertx, "mjs:index.js", catchphrase )
+        .onSuccess( id -> {
+            loggedCatchphrase( theContext, catchphrase );
+            theVertx.undeploy( id, (ignored) -> theContext.failNow( "should have failed on require statement" ) );
+        })
+        .onFailure( error -> {
+            loggedCatchphrase( theContext, catchphrase );
+            theContext.verify( () -> {
+                assertThat( error.getMessage() ).contains( "require is not defined" );
+            } );
+            theContext.completeNow();
+        } );
     }
 
     private void jvm11OrLater( VertxTestContext theContext ) {
@@ -72,8 +96,8 @@ public class Tests {
         });
     }
 
-    private Future<String> deploy( Vertx theVertx, String theFactory, String theCatchphrase ) {
-        return theVertx.deployVerticle( theFactory + ":index.js", new DeploymentOptions().setConfig( new JsonObject().put( "catchphrase", theCatchphrase ) ) );
+    private Future<String> deploy( Vertx theVertx, String theModule, String theCatchphrase ) {
+        return theVertx.deployVerticle( theModule, new DeploymentOptions().setConfig( new JsonObject().put( "catchphrase", theCatchphrase ) ) );
     }
 
     private void loggedCatchphrase( VertxTestContext theContext, String catchphrase ) {
