@@ -26,6 +26,7 @@ public class Tests {
     void setup() {
         _appender = new ListAppender<>();
         _appender.start();
+        ((ch.qos.logback.classic.Logger)LoggerFactory.getLogger( "es4x.tests.index" )).addAppender( _appender );
     }
 
     @Test
@@ -36,7 +37,6 @@ public class Tests {
             return;
         }
 
-        ((ch.qos.logback.classic.Logger)LoggerFactory.getLogger( "es4x.tests.index" )).addAppender( _appender );
         String catchphrase = "Marcia, Marcia, Marcia!";
         deploy( theVertx, "js:index.js", catchphrase )
         .onSuccess(id -> {
@@ -54,7 +54,6 @@ public class Tests {
             return;
         }
 
-        ((ch.qos.logback.classic.Logger)LoggerFactory.getLogger( "es4x.tests.index" )).addAppender( _appender );
         String catchphrase = "Shazbot! Nanu-nanu";
         deploy( theVertx, "mjs:index.mjs", catchphrase )
         .onSuccess( id -> {
@@ -72,7 +71,6 @@ public class Tests {
             return;
         }
 
-        ((ch.qos.logback.classic.Logger)LoggerFactory.getLogger( "es4x.tests.index" )).addAppender( _appender );
         String catchphrase = "Are we there yet?";
         deploy( theVertx, "mjs:index.js", catchphrase )
         .onSuccess( id -> {
