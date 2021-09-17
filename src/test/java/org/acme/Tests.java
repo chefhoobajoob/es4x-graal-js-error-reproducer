@@ -66,7 +66,7 @@ public class Tests {
 
     @Test
     public void mjsFactoryFailsOnRequire( Vertx theVertx, VertxTestContext theContext ) {
-        _logger = LoggerFactory.getLogger( Tests.class.getCanonicalName() + ".mjsFactoryDeploys" );
+        _logger = LoggerFactory.getLogger( Tests.class.getCanonicalName() + ".mjsFactoryFailsOnRequire" );
         jvm11OrLater( theContext );
         if ( theContext.failed() ) {
             return;
