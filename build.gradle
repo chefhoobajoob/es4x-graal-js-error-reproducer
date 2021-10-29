@@ -51,12 +51,14 @@ dependencies {
     testImplementation 'ch.qos.logback:logback-core:1.2.3'
 }
 
+// use this to ensure java 11 build, regardles of jvm version running gradle
 tasks.withType(JavaCompile).configureEach {
     javaCompiler = javaToolchains.compilerFor {
-        languageVersion = JavaLanguageVersion.of(8)
+        languageVersion = JavaLanguageVersion.of(11)
     }
 }
 
+// use this to ensure java 11 test, regardles of jvm version running gradle
 tasks.withType(Test).configureEach {
     javaLauncher = javaToolchains.launcherFor {
         languageVersion = JavaLanguageVersion.of(11)
@@ -76,11 +78,13 @@ sourceSets {
     }
 }
 
-apply from: "es4x-codegen.gradle"
+apply from: "es4x-codegen.gradle" // this is used to modularize codegen customization
 task generatePolyglotApis(type: JavaCompile) {
     group 'build'
     description 'Generates Vertx js and rxjava apis'
+
     source = sourceSets.main.java
+    options.forkOptions.jvmArgs = es4xJvmArgs // this is required to forward codegen system properties to compiler
     options.annotationProcessorPath = configurations.annotationProcessor
     classpath = configurations.compileClasspath
     options.debugOptions.debugLevel = "source,lines,vars"
@@ -93,9 +97,9 @@ task generatePolyglotApis(type: JavaCompile) {
 }
 
 compileJava {
-    dependsOn(generatePolyglotApis)
+    dependsOn(generatePolyglotApis) // this is required to run codegen before full library compile
     options.debugOptions.debugLevel = "source,lines,vars"
-    source += sourceSets.vertxPolyglot.java // compile generated java classes, if any
+    source += sourceSets.vertxPolyglot.java // ensure generated java classes, if any, are included
     options.compilerArgs += '-proc:none'
 }
 
