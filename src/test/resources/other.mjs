@@ -1,6 +1,4 @@
 const LoggerFactory = Java.type('org.slf4j.LoggerFactory')
 const logger = LoggerFactory.getLogger('es4x.tests.other')
 
-module.exports = {
-  sayHello: () => logger.info('Hello from Other!')
-}
+export const sayHello = () => logger.info('Hello from Other!')
